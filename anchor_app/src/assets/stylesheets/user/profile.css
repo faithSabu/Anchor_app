@@ -1,0 +1,8 @@
+.profilePhotoDiv{
+    border-radius: 50%;
+}
+
+.messageBtnUserProfile:hover{
+    background: linear-gradient(98.63deg, #595862 0%, #d8d6d6 100%);
+    border: none;
+}

@@ -1,0 +1,17 @@
+.sbod1{
+    box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 1px 1px 1px 1px;
+
+}
+
+.iconsDiv{
+    padding: 24px 30px;
+    border-radius: 10px;
+}
+
+.iconsDiv a.active {
+   font-weight: bold;
+  }
+
+.iconsDiv:hover{
+    background-color: rgb(227, 227, 227);
+}
