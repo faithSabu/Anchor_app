@@ -25,8 +25,9 @@ function Notifications() {
     <>
       <Navbar />
       <Sidebar />
-      <div className='pt-16 pl-64 min-h-screen flex justify-center bg-[#fafafa]'>
-        <div className='w-full min-h-[80vh] px-52 py-5'>
+      {/* <div className='pt-16 pl-64 min-h-screen flex justify-center bg-[#fafafa]'> */}
+      <div className='pt-16 sm:pl-14 lg:pl-64 min-h-screen flex bg-[#fafafa]'>
+        <div className='w-full min-h-[80vh] sm:px-28 lg:px-52 py-5'>
           <div className='flex justify-center p-2'>
             <h1 className='font-semibold text-2xl'>Notifications</h1>
           </div>

@@ -1,5 +1,6 @@
 import axiosInstance from '../config/baseUrl'
 const jwtToken = localStorage.getItem('jwtToken')
+console.log(jwtToken,'jwttoken at chatrequets');
 const config= {
     credentials:'include',
     headers:{
@@ -8,7 +9,8 @@ const config= {
     },
   }
 
-export const userChats = (id)=>axiosInstance.get(`/chat/${id}`,config)
+export const userChats = (id)=>axiosInstance.get(`/chat/findUserChats/${id}`,config)
 export const addNewChat = (senderId,receiverId)=>axiosInstance.post(`/chat/`,{senderId,receiverId},config)
+export const updateTime = (chatId) => axiosInstance.get(`/chat/updateChatTime?chatId=${chatId}`,config)
 
  

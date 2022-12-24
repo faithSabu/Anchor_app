@@ -9,6 +9,7 @@ import axiosInstance from '../../config/baseUrl';
 import { useNavigate } from 'react-router-dom';
 import PostViewModal from '../../components/User/Modal/PostViewModal';
 import { modalContext } from '../../context/Context';
+import FollowListModal from '../../components/User/Modal/FollowListModal';
 // import ProfileSettings from '../../components/User/ProfileSettings';
 
 function Profile() {
@@ -23,8 +24,11 @@ function Profile() {
     const [username, setUsername] = useState('')
     const [name, setName] = useState('')
     const [userDetails, setUserDetails] = useState('')
-    const [postId,setPostId] = useState('')
-    const [profileChange,setProfileChange] = useState(false)
+    const [postId, setPostId] = useState('')
+    const [profileChange, setProfileChange] = useState(false)
+    const [followListModalOpen, setFollowListModalOpen] = useState(false)
+    const [heading, setHeading] = useState('')
+    const [followList, setFollowList] = useState([])
     const config = {
         credentials: 'include',
         headers: {
@@ -41,7 +45,6 @@ function Profile() {
     useEffect(() => {
         setPostViewModalOpen(false)
         axiosInstance.get(`/getUserPosts?userId=${user[0]._id}`, config).then(resp => {
-            console.log(resp.data);
             setPosts(resp.data)
         })
         axiosInstance.get(`/getProfilerPicture?userId=${user[0]._id}`, config).then(resp => {
@@ -50,12 +53,12 @@ function Profile() {
             setUsername(resp.data[0].username)
             setUserDetails(resp.data[0])
         })
-    }, [profileChange,postUploaded])
+    }, [profileChange, postUploaded])
 
 
 
     const uploadImage = (e) => {
-        if (!e.target.files[0]) return console.log("erroer");
+        if (!e.target.files[0]) return console.log("error");
         const data = new FormData()
         data.append('file', e.target.files[0])
         data.append('upload_preset', 'anchor')
@@ -98,15 +101,28 @@ function Profile() {
                             </div>
                             <div className='flex gap-x-7 text-xl'>
                                 <span>{posts.length} Posts</span>
-                                <span>{userDetails.followers ? userDetails.followers?.length : '0'} Followers</span>
-                                <span>{userDetails.following ? userDetails.following?.length : '0'} Following</span>
+                                {/* <span>{userDetails.followers ? userDetails.followers?.length : '0'} Followers</span>
+                                <span>{userDetails.following ? userDetails.following?.length : '0'} Following</span> */}
+
+                                <span onClick={() => {
+                  setFollowListModalOpen(true)
+                  setHeading('Followers')
+                  setFollowList(userDetails.followers)
+                }}>{userDetails.followers ? userDetails.followers?.length : '0'} Followers</span>
+                <span onClick={() => {
+                  setFollowListModalOpen(true)
+                  setHeading('Following')
+                  setFollowList(userDetails.following)
+                }}>{userDetails.following ? userDetails.following?.length : '0'} Following</span>
+
+                                
                             </div>
                             <div>
                                 <span className='text-lg'>{name}</span>
                             </div>
                             {/* <div>
                             <img src={url} alt="" />
-                        </div> */} 
+                        </div> */}
                         </div>
                     </div>
                     <div className='w-full h-[1px] bg-black mt-2'></div>
@@ -132,7 +148,7 @@ function Profile() {
                     </div>
                 </div>
             </div>
-
+            {followListModalOpen && <FollowListModal setFollowListModalOpen={setFollowListModalOpen} heading={heading} userId={userDetails._id} followList={followList} />}
             {postViewModalOpen && <PostViewModal setPostViewModalOpen={setPostViewModalOpen} postId={postId} profileChange={profileChange} setProfileChange={setProfileChange} />}
         </>
     )

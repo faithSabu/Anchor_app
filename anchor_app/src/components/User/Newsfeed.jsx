@@ -1,5 +1,5 @@
 import '../../assets/stylesheets/user/newsfeed.css'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { FaRegHeart, FaHeart, FaRegComment, FaRegShareSquare, FaRegBookmark, FaEllipsisH, FaRegSmileWink, FaEllipsisV } from "react-icons/fa";
 import { AiOutlineEllipsis } from "react-icons/ai";
 // import { FiSend } from "react-icons/fi";
@@ -15,11 +15,14 @@ import UserProfile from '../../pages/User/UserProfile';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'timeago.js'
 import { deleteCommentNotification, handleDeleteComment, ReportComment } from '../../api/PostRequests';
+import { io } from 'socket.io-client'
+import { notificationContext } from '../../context/NotificationContext';
 
 
 
 function Newsfeed() {
   const { postUploaded, setpostUploaded } = useContext(modalContext)
+  const { notification, setNotification } = useContext(notificationContext)
   const navigate = useNavigate();
   const jwtToken = localStorage.getItem('jwtToken')
   const userString = localStorage.getItem('user')
@@ -30,6 +33,7 @@ function Newsfeed() {
   const [commentButtonDisabled, setCommentButtonDisabled] = useState(0)
   const [commentInput, setCommentInput] = useState('')
   const [isFollow, setIsFollow] = useState(false)
+  const socket = useRef()
   const config = {
     credentials: 'include',
     headers: {
@@ -38,7 +42,17 @@ function Newsfeed() {
     },
   }
 
+  // adding active user
   useEffect(() => {
+    socket.current = io('http://localhost:8800')
+    socket.current.emit('new-user-add', user[0]._id)
+    // socket.current.on('get-users', (users) => {
+    //     setOnlineUsers(users)
+    // })
+  }, [userString])
+
+  useEffect(() => {
+    console.log(config, 'in useEffect newsfeed');
     axiosInstance.get(`/getAllPosts`, config).then(resp => {
       console.log(resp);
       setPosts(resp.data)
@@ -60,8 +74,22 @@ function Newsfeed() {
         setpostUploaded(!postUploaded)
         setCommentButtonDisabled(0)
         commentNotification(user[0]._id, username, postUserId, postId)
+
+        //sent notification to socket
+        socket.current.emit('sendNotification', postUserId)
+      }).catch(err=>{
+        console.log(err,'err at postcomment');
       })
   }
+
+  useEffect(() => {
+    socket.current.on('receiveNotificaton', (data) => {
+      console.log('receiveNotificaton at front end');
+      setNotification(Math.random())
+    })
+  }, [])
+
+
 
   const handlePostDelete = (postId) => {
     Swal.fire({
@@ -92,7 +120,9 @@ function Newsfeed() {
       resp.data = [resp.data]
       localStorage.setItem("user", JSON.stringify(resp.data));
       let result = followNotification(user[0]._id, user[0].username, refUserId)
-      console.log(result);
+
+      //sent notification to socket
+      socket.current.emit('sendNotification', refUserId)
     })
   }
 
@@ -110,7 +140,7 @@ function Newsfeed() {
       <div className='flex flex-col'>
         {posts.length > 0 ?
           posts.map((item, index) => {
-            return <div key={item._id} className='bg-white my-5 rounded-2xl min-w-[500px] border border-gray-400 overflow-hidden'>
+            return <div key={item._id} className='bg-white my-5 rounded-2xl md:min-w-[500px] max-w-[400px] border border-gray-400 overflow-hidden'>
               {/* top area */}
               <div className='min-h-[70px] bg-white px-4 py-2 flex justify-between items-center'>
                 <div className='flex gap-4 items-center'>
@@ -180,12 +210,14 @@ function Newsfeed() {
 
               {item.description && <div className='px-3 pb-2 w-[500px] break-words'>
                 <span className='break-words'>{item.description}</span>
-              </div> }
+              </div>}
               <div onDoubleClick={() => {
                 console.log(item);
                 axiosInstance.get(`/likePost?postId=${item._id}&userId=${user[0]._id}`, config).then((resp) => {
                   console.log(resp);
                   likeNotification(user[0]._id, user[0].username, item.userData[0]._id, item._id)
+                  //sent notification to socket
+                  socket.current.emit('sendNotification', item.userData[0]._id)
                   setChange(!change)
                 })
               }}>
@@ -195,6 +227,7 @@ function Newsfeed() {
               <div>
                 <div className='flex justify-between px-4 py-3'>
                   <div className='flex gap-8 text-3xl font-bold text-gray-700'>
+                    <div className='flex justify-center items-center gap-3'>
                     {(item.likes.filter(elem => elem.refUser === user[0]._id)).length ?
                       <FaHeart className='dislike' color='red' onClick={() => {
                         axiosInstance.get(`/dislikePost?postId=${item._id}&userId=${user[0]._id}`, config).then(() => {
@@ -206,16 +239,23 @@ function Newsfeed() {
                       <FaRegHeart className='like hover:text-gray-300' onClick={() => {
                         axiosInstance.get(`/likePost?postId=${item._id}&userId=${user[0]._id}`, config).then(() => {
                           likeNotification(user[0]._id, user[0].username, item.userData[0]._id, item._id)
+                          //sent notification to socket
+                          socket.current.emit('sendNotification', item.userData[0]._id)
                           setChange(!change)
                         })
                       }} />
                     }
-                    <FaRegComment onClick={() => handleAccordionOpen(item._id)} />
+                    {item.likes.length ? <div className='text-sm'>{item.likes?.length}</div>: ''}
+                    </div>
+                    <div className='flex  justify-center items-center gap-3'>
+                    <FaRegComment className='self-start hover:text-gray-400' onClick={() => handleAccordionOpen(item._id)} />
+                    {item.comments.length ? <div className='text-sm'>{item.comments?.length} </div> : ''}
+                    </div>
                     {/* <FiSend/  */}
                   </div>
-                  <div className='text-3xl'>
+                  {/* <div className='text-3xl'>
                     <FaRegBookmark />
-                  </div>
+                  </div> */}
                 </div>
                 <div className='px-4'>
                   <Accordion open={accordionOpen === item._id} >
@@ -243,11 +283,11 @@ function Newsfeed() {
                                 <MenuList className='flex flex-col z-20 bg-gray-200'>
                                   {user[0]._id === elem.refUser ?
                                     <MenuItem className='hover:border hover:border-gray-400  py-2 rounded-2xl' onClick={() => {
-                                     handleDeleteComment(item._id,elem._id).then((resp)=>{
-                                      console.log(user[0]._id,item.userId,item._id);
-                                      deleteCommentNotification(user[0]._id,item.userId,item._id)
-                                      setChange(!change)
-                                     })
+                                      handleDeleteComment(item._id, elem._id).then((resp) => {
+                                        console.log(user[0]._id, item.userId, item._id);
+                                        deleteCommentNotification(user[0]._id, item.userId, item._id)
+                                        setChange(!change)
+                                      })
                                     }}>Delete Comment</MenuItem>
                                     :
                                     <MenuItem className='hover:border hover:border-gray-400  py-2 rounded-2xl' onClick={() => {

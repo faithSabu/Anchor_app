@@ -10,7 +10,7 @@ function Home() {
     <>
       <Navbar/>
       <Sidebar/>
-      <div className='pt-16 pl-64 min-h-screen flex justify-center bg-[#fafafa]'>
+      <div className='pt-16 lg:pl-64 min-h-screen flex justify-center bg-[#fafafa]'>
        <Newsfeed/>
       </div>
     </>

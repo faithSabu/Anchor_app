@@ -8,13 +8,14 @@ module.exports = {
             members: { $all: [req.body.senderId, req.body.receiverId] }
         })
         if (chat) {
-            res.status(200).json({chat:true})
+            res.status(200).json(chat)
         } else {
             const newChat = new CHATS({
                 members: [req.body.senderId, req.body.receiverId]
             })
             try {
                 const result = await newChat.save()
+                console.log(result,'chat created');
                 res.status(200).json(result)
             } catch (error) {
                 res.status(500).json(error)
@@ -28,8 +29,7 @@ module.exports = {
         try {
             const chat = await CHATS.find({
                 members: { $in: [req.params.userId] }
-                // members:{$in:['fsdfsdf']} 
-            })
+            }).sort( { 'updatedAt': -1 } )
             res.status(200).json(chat)
         } catch (error) {
             res.status(500).json(error)
@@ -42,6 +42,19 @@ module.exports = {
                 members: { $all: [req.params.firstId, req.params.secondId] }
             })
             res.status(200).json(chat)
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+
+    updateChatTime:(req,res)=>{
+        try {
+            CHATS.updateOne(
+                {_id:req.query.chatId},
+                {updatedAt:Date.now()}
+            ).then(resp=>{
+                res.status(200).json(resp)
+            })
         } catch (error) {
             res.status(500).json(error)
         }

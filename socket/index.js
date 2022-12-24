@@ -37,4 +37,12 @@ io.on("connection",(socket)=>{
         console.log('User Disconnected',activeUsers);
         io.emit('get-users',activeUsers)
     })
+
+    socket.on('sendNotification',userId=>{
+        const user = activeUsers.find(user=>user.userId ===userId)
+        console.log('sendfdsfsdfsdf');
+        if(user){
+            io.to(user.socketId).emit('receiveNotificaton',1)
+        }
+    })
 })

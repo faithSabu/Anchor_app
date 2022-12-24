@@ -1,7 +1,7 @@
 .Chat {
   position: relative;
   display: grid;
-  grid-template-columns: 22% auto;
+  grid-template-columns: 28% auto;
   gap: 1rem;
 }
 
@@ -17,7 +17,6 @@
   gap: 1rem;
   background: var(--cardColor);
   /* border-radius: 1rem; */
-  padding: 1rem;
   height: 97%;
   /* min-height: 80vh; */
   overflow: scroll;

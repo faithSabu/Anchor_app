@@ -2,7 +2,7 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import { getUser } from '../../api/UserRequests'
 
-function Conversation({ data, currentUserId, online }) {
+function Conversation({ data, currentUserId, online ,topChat}) {
     const [userData, setUserData] = useState(null)
     useEffect(() => {
         const userId = data.members.find(id => id !== currentUserId)

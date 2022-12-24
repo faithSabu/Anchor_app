@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { addNewChat } from '../../api/ChatRequests';
 import PostViewModal from '../../components/User/Modal/PostViewModal';
 import { modalContext } from '../../context/Context';
+import FollowListModal from '../../components/User/Modal/FollowListModal';
 // import ProfileSettings from '../../components/User/ProfileSettings';
 
 function UserProfile() {
@@ -24,8 +25,11 @@ function UserProfile() {
   const [username, setUsername] = useState('')
   const [name, setName] = useState('')
   const [userDetails, setUserDetails] = useState('')
-  const [postId,setPostId] = useState('')
-    const [profileChange,setProfileChange] = useState(false)
+  const [postId, setPostId] = useState('')
+  const [profileChange, setProfileChange] = useState(false)
+  const [followListModalOpen, setFollowListModalOpen] = useState(false)
+  const [heading, setHeading] = useState('')
+  const [followList,setFollowList] = useState([])
   // const [settingsOpen, setsettingsOpen] = useState(false)
 
   //modals
@@ -49,7 +53,6 @@ function UserProfile() {
       setName(resp.data[0].name)
       setUsername(resp.data[0].username)
       setUserDetails(resp.data[0])
-      console.log(resp.data[0]);
     })
   }, [location.state.userId])
 
@@ -58,10 +61,10 @@ function UserProfile() {
     <>
       <Navbar />
       <Sidebar />
-      <div className='pt-16 pl-64 flex justify-center min-h-screen'>
-        <div className='py-10 px-10 bg-white'>
-          <div className='px-10 py-2 flex justify-between items-center gap-x-16 bg-white'>
-            <div className='profilePhotoDiv p-2 overflow-hidden'>
+      <div className='pt-16 pl-64 flex justify-center min-h-screen '>
+        <div className='py-7 px-10 bg-white'>
+          <div className='px-10 flex justify-between items-center gap-x-16 bg-white'>
+            <div className='profilePhotoDiv overflow-hidden'>
               {profileImage ?
                 <img className='w-[180px] h-[180px] object-cover' style={{ borderRadius: '50%' }} src={profileImage} alt="" />
                 :
@@ -74,15 +77,25 @@ function UserProfile() {
                   {/* <div>{username}</div> */}
                   <div>
                     <button className='messageBtnUserProfile px-2 py-1 border-2 border-gray-400' onClick={() => {
-                      addNewChat(user[0]._id, userDetails._id).then(() => navigate('/chat'))
+                      addNewChat(user[0]._id, userDetails._id).then((resp) => {
+                        navigate('/chat', { state: { chat: resp.data } })
+                      })
                     }}>Message</button>
                   </div>
                 </div>
               </div>
               <div className='flex gap-x-7 text-xl'>
                 <span>{posts?.length} Posts</span>
-                <span>{userDetails.followers ? userDetails.followers?.length : '0'} Followers</span>
-                <span>{userDetails.following ? userDetails.following?.length : '0'} Following</span>
+                <span onClick={() => {
+                  setFollowListModalOpen(true)
+                  setHeading('Followers')
+                  setFollowList(userDetails.followers)
+                }}>{userDetails.followers ? userDetails.followers?.length : '0'} Followers</span>
+                <span onClick={() => {
+                  setFollowListModalOpen(true)
+                  setHeading('Following')
+                  setFollowList(userDetails.following)
+                }}>{userDetails.following ? userDetails.following?.length : '0'} Following</span>
               </div>
               <div>
                 <span className='text-lg'>{name}</span>
@@ -103,7 +116,7 @@ function UserProfile() {
                       <img onClick={() => {
                         setPostViewModalOpen(true)
                         setPostId(item._id)
-                      }} className='h-[200px] rounded-lg' src={item.postUrl} alt="" />
+                      }} className='h-[250px] w-full rounded-lg' src={item.postUrl} alt="" />
                     </div>
                   })
                   }
@@ -114,6 +127,7 @@ function UserProfile() {
             </div>
           </div>
         </div>
+        {followListModalOpen && <FollowListModal setFollowListModalOpen={setFollowListModalOpen} heading={heading} userId={userDetails._id} followList={followList} />}
       </div>
       {postViewModalOpen && <PostViewModal setPostViewModalOpen={setPostViewModalOpen} postId={postId} profileChange={profileChange} setProfileChange={setProfileChange} />}
     </>

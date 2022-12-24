@@ -433,6 +433,7 @@ module.exports = {
         //     res.json(resp)
         // })
         try {
+            console.log(req.params.userId);
             USERS.find({ _id: ObjectId(req.params.userId) }).then(resp => {
                 res.json(resp)
             })
@@ -442,7 +443,6 @@ module.exports = {
     },
 
     getAllUsers:(req,res)=>{
-        console.log('here');
         try {
             USERS.find().then(resp=>{
                 res.status(200).json(resp)
@@ -594,8 +594,9 @@ module.exports = {
     },
 
     getNotifications: async (req, res) => {
+        console.log(req.query);
         try {
-            NOTIFICATIONS.find({ $and: [{ userId: '637f0d593cafd363d21f4bdb' }, { "notifications.isRead": false }] })
+            NOTIFICATIONS.find({ $and: [{ userId:req.query.userId }, { "notifications.isRead": false }] })
                 .populate('notifications.refUserId')
                 .then(resp => {
                     {
@@ -738,7 +739,30 @@ module.exports = {
         } catch (error) {
             res.status(500).json(error)
         }
-    }
+    },
+
+    getNotificationLength:(req,res)=>{
+        try {
+            NOTIFICATIONS.find({userId:req.query.userId}).then(resp=>{
+                res.status(200).json(resp[0]?.notifications?.length)
+            })
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+
+    getFollowList:(req,res)=>{
+        const {userId,followType} = req.query;
+        try {
+            USERS.find({_id:ObjectId(userId)},followType)
+            .then(resp=>{
+                console.log(resp);
+                res.status(200).json(resp)
+            })
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    }    
 
 
 

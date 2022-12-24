@@ -5,9 +5,8 @@ import { addMessage, getMessages } from '../../api/MessageRequest';
 import { getUser } from '../../api/UserRequests';
 import { format } from 'timeago.js'
 import InputEmoji from 'react-input-emoji'
-import { updateTime } from '../../api/ChatRequests';
 
-function Chatbox({ chat, currentUser, setSendMessage, receivedMessage, online,topChat,setTopChat }) {
+function ChatboxTest({ chat, currentUser, setSendMessage, receivedMessage, online }) {
   const [userData, setUserData] = useState(null);
   const [messages, setMessages] = useState([])
   const [newMessages, setNewMessages] = useState('')
@@ -15,7 +14,7 @@ function Chatbox({ chat, currentUser, setSendMessage, receivedMessage, online,to
   const scroll = useRef()
 
   useEffect(() => {
-    if (receivedMessage && receivedMessage.chatId === chat._id) {
+    if (receivedMessage !== null && receivedMessage.chatId === chat._id) {
       setMessages([...messages, receivedMessage])
     }
   }, [receivedMessage])
@@ -66,8 +65,6 @@ function Chatbox({ chat, currentUser, setSendMessage, receivedMessage, online,to
         const { data } = await addMessage(message)
         setMessages([...messages, data])
         setNewMessages('')
-        updateTime(chat._id)
-        setTopChat(!topChat)
       } catch (error) {
         console.log(error);
       }
@@ -139,4 +136,4 @@ function Chatbox({ chat, currentUser, setSendMessage, receivedMessage, online,to
   )
 }
 
-export default Chatbox
+export default ChatboxTest

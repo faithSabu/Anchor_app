@@ -8,7 +8,7 @@ import Navbar from '../../components/User/Navbar';
 import Sidebar from '../../components/User/Sidebar';
 import { useLocation } from 'react-router-dom';
 
-function Chat() {
+function ChatTest() {
     const userString = localStorage.getItem('user')
     const user = JSON.parse(userString);
     const [chats, setChats] = useState([])
@@ -16,7 +16,6 @@ function Chat() {
     const [onlineUsers, setOnlineUsers] = useState([])
     const [sendMessage, setSendMessage] = useState(null)
     const [receivedMessage, setReceiveMessage] = useState(null)
-    const [topChat,setTopChat] = useState(false)
     const location = useLocation();
     const socket = useRef()
 
@@ -40,7 +39,7 @@ function Chat() {
         socket.current.on('receive-message', (data) => {
             setReceiveMessage(data)
         })
-    }, [sendMessage])
+    }, [])
 
     useEffect(() => {
         const getChats = async () => {
@@ -52,7 +51,7 @@ function Chat() {
             }
         }
         getChats()
-    }, [userString,topChat])
+    }, [userString])
 
     const checkOnlineStatus = (chat) => {
         const chatMember = chat.members.find(member => member !== user[0]._id)
@@ -64,15 +63,15 @@ function Chat() {
         <>
             <Navbar />
             <Sidebar />
-            <div className='pt-16 sm:pl-14 lg:pl-64 min-h-screen flex bg-[#fafafa]'>
-                <div className='flex mx-10 my-2 rounded-md border border-zinc-300 bg-white w-full h-[88vh]' >
+            <div className='pt-16 md:pl-14 lg:pl-64 min-h-screen flex bg-[#fafafa]'>
+                <div className='flex mx-10 my-2 rounded-md px-7 border border-zinc-300 bg-white w-full h-[88vh]' >
                     <div className="Chat w-full">
                         {/* left side */}
-                        <div className="Left-side-chat px-2">
-                            <div className="Chat-container ">
+                        <div className="Left-side-chat">
+                            <div className="Chat-container">
                                 <h2>Chats</h2>
-                                <div className={`Chat-list`}>
-                                    {chats&&chats.map(chat => (
+                                <div className="Chat-list">
+                                    {chats.map(chat => (
                                         <div key={chat._id} onClick={() => {
                                             setCurrentChat(chat)
                                         }}>
@@ -86,7 +85,7 @@ function Chat() {
                         {/* right side */}
                         <div className="Right-side-chat">
                             {/* chat body */}
-                            <Chatbox chat={currentChat || location?.state?.chat} currentUser={user[0]._id} setSendMessage={setSendMessage} receivedMessage={receivedMessage} topChat={topChat} setTopChat={setTopChat} />
+                            <Chatbox chat={currentChat || location?.state?.chat} currentUser={user[0]._id} setSendMessage={setSendMessage} receivedMessage={receivedMessage} />
                         </div>
                     </div>
                 </div>
@@ -95,4 +94,4 @@ function Chat() {
     )
 }
 
-export default Chat
+export default ChatTest

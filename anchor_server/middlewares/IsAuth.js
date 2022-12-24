@@ -1,6 +1,7 @@
 const { verify } = require('jsonwebtoken')
 
 const isAuth = async (req, res, next) => {
+    try {
     const authorization = req.headers['authorization']
     if (!authorization) {
         // throw new Error ('You need to login')
@@ -8,7 +9,7 @@ const isAuth = async (req, res, next) => {
     }
     const token = authorization.split(' ')[1]
     const { userId } = await verify(token, process.env.JWT_SECRET_TOKEN)
-    try {
+    
         if (userId !== null) {
             next()
         }

@@ -6,15 +6,18 @@ import reportWebVitals from './reportWebVitals';
 
 import { BrowserRouter } from 'react-router-dom'
 import Contextfn from './context/Context';
+import NotificationContextFn from './context/NotificationContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   // <React.StrictMode>
+  <NotificationContextFn>
     <Contextfn>
       <BrowserRouter>
         <App />
       </BrowserRouter>
     </Contextfn>
+  </NotificationContextFn>
   // </React.StrictMode>
 );
 
