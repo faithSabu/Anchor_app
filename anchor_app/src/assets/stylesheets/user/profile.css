@@ -4,5 +4,8 @@
 
 .messageBtnUserProfile:hover{
     background: linear-gradient(98.63deg, #595862 0%, #d8d6d6 100%);
-    border: none;
+}
+
+.followBtnUserProfile:hover{
+    background: linear-gradient(98.63deg, #6e65c5 0%, #d8d7db 100%);
 }

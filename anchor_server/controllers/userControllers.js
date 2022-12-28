@@ -125,7 +125,9 @@ module.exports = {
         // })
         try {
             let user = await USERS.find({ email: req.body.email })
+            console.log('no user');
             if (user.length > 0) {
+                console.log('user exist');
                 bcrypt.compare(req.body.password, user[0].password).then(async function (result) {
                     if (result) {
 
@@ -391,8 +393,8 @@ module.exports = {
         }
     },
 
-    deleteComment:(req,res)=>{
-        const {postId,commentId} = req.query;
+    deleteComment: (req, res) => {
+        const { postId, commentId } = req.query;
         console.log(req.query);
         try {
             POSTS.updateOne(
@@ -402,7 +404,7 @@ module.exports = {
                 {
                     $pull: {
                         comments: {
-                            _id:ObjectId(commentId)
+                            _id: ObjectId(commentId)
                         }
                     }
                 }
@@ -442,9 +444,9 @@ module.exports = {
         }
     },
 
-    getAllUsers:(req,res)=>{
+    getAllUsers: (req, res) => {
         try {
-            USERS.find().then(resp=>{
+            USERS.find().then(resp => {
                 res.status(200).json(resp)
             })
         } catch (error) {
@@ -596,7 +598,7 @@ module.exports = {
     getNotifications: async (req, res) => {
         console.log(req.query);
         try {
-            NOTIFICATIONS.find({ $and: [{ userId:req.query.userId }, { "notifications.isRead": false }] })
+            NOTIFICATIONS.find({ $and: [{ userId: req.query.userId }, { "notifications.isRead": false }] })
                 .populate('notifications.refUserId')
                 .then(resp => {
                     {
@@ -665,8 +667,8 @@ module.exports = {
         }
     },
 
-    commentNotification:async(req,res)=>{
-        const { commentedUserId,commentedUsername,postUserId,postId } = req.query;
+    commentNotification: async (req, res) => {
+        const { commentedUserId, commentedUsername, postUserId, postId } = req.query;
         const message = `${commentedUsername} commented on  your post`
         try {
             await NOTIFICATIONS.updateOne(
@@ -721,10 +723,10 @@ module.exports = {
         }
     },
 
-    getSinglePostData:(req,res)=>{
+    getSinglePostData: (req, res) => {
         try {
             POSTS.aggregate([
-                { $match: {_id:ObjectId(req.query.postId)} },
+                { $match: { _id: ObjectId(req.query.postId) } },
                 {
                     $lookup: {
                         from: 'users',
@@ -741,9 +743,9 @@ module.exports = {
         }
     },
 
-    getNotificationLength:(req,res)=>{
+    getNotificationLength: (req, res) => {
         try {
-            NOTIFICATIONS.find({userId:req.query.userId}).then(resp=>{
+            NOTIFICATIONS.find({ userId: req.query.userId }).then(resp => {
                 res.status(200).json(resp[0]?.notifications?.length)
             })
         } catch (error) {
@@ -751,18 +753,35 @@ module.exports = {
         }
     },
 
-    getFollowList:(req,res)=>{
-        const {userId,followType} = req.query;
+    getFollowList: (req, res) => {
+        const { userId, followType } = req.query;
         try {
-            USERS.find({_id:ObjectId(userId)},followType)
-            .then(resp=>{
-                console.log(resp);
+            USERS.find({ _id: ObjectId(userId) }, followType)
+                .then(resp => {
+                    console.log(resp);
+                    res.status(200).json(resp)
+                })
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+
+    updatePost: (req, res) => {
+        const { postId, description } = req.query
+        try {
+            POSTS.updateOne(
+                { _id: ObjectId(postId) },
+                {
+                    description: description
+                },
+                {upsert:true}
+            ).then(resp => {
                 res.status(200).json(resp)
             })
         } catch (error) {
             res.status(500).json(error)
         }
-    }    
+    }
 
 
 

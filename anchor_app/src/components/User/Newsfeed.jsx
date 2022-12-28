@@ -17,11 +17,12 @@ import { format } from 'timeago.js'
 import { deleteCommentNotification, handleDeleteComment, ReportComment } from '../../api/PostRequests';
 import { io } from 'socket.io-client'
 import { notificationContext } from '../../context/NotificationContext';
+import PostEditModal from './Modal/PostEditModal';
 
 
 
 function Newsfeed() {
-  const { postUploaded, setpostUploaded } = useContext(modalContext)
+  const { postUploaded, setpostUploaded, postEditDetails, setPostEditDetails } = useContext(modalContext)
   const { notification, setNotification } = useContext(notificationContext)
   const navigate = useNavigate();
   const jwtToken = localStorage.getItem('jwtToken')
@@ -32,7 +33,9 @@ function Newsfeed() {
   const [myComment, setMyComment] = useState('');
   const [commentButtonDisabled, setCommentButtonDisabled] = useState(0)
   const [commentInput, setCommentInput] = useState('')
+  const [newNotification, setNewNotification] = useState(false)
   const [isFollow, setIsFollow] = useState(false)
+  const [postEditModalIsOpen,setPostEditModalIsOpen] = useState(false)
   const socket = useRef()
   const config = {
     credentials: 'include',
@@ -46,15 +49,14 @@ function Newsfeed() {
   useEffect(() => {
     socket.current = io('http://localhost:8800')
     socket.current.emit('new-user-add', user[0]._id)
+    setNewNotification(!newNotification)
     // socket.current.on('get-users', (users) => {
     //     setOnlineUsers(users)
     // })
   }, [userString])
 
   useEffect(() => {
-    console.log(config, 'in useEffect newsfeed');
     axiosInstance.get(`/getAllPosts`, config).then(resp => {
-      console.log(resp);
       setPosts(resp.data)
     })
   }, [change, postUploaded, isFollow])
@@ -77,8 +79,10 @@ function Newsfeed() {
 
         //sent notification to socket
         socket.current.emit('sendNotification', postUserId)
-      }).catch(err=>{
-        console.log(err,'err at postcomment');
+        setNewNotification(!newNotification)
+
+      }).catch(err => {
+        console.log(err, 'err at postcomment');
       })
   }
 
@@ -87,9 +91,16 @@ function Newsfeed() {
       console.log('receiveNotificaton at front end');
       setNotification(Math.random())
     })
-  }, [])
+  }, [newNotification])
 
-
+  const handlePostEdit = (postData) => {
+    setPostEditDetails({
+      postId:postData._id,
+      postUrl: postData.postUrl,
+      description: postData.description
+    })
+    setPostEditModalIsOpen(true)
+  }
 
   const handlePostDelete = (postId) => {
     Swal.fire({
@@ -123,6 +134,7 @@ function Newsfeed() {
 
       //sent notification to socket
       socket.current.emit('sendNotification', refUserId)
+      setNewNotification(!newNotification)
     })
   }
 
@@ -168,7 +180,7 @@ function Newsfeed() {
                         ?
                         <Menu placement="right-start">
                           <MenuHandler>
-                            <Button className='bg-white text-black rounded-2xl p-0 px-2'> <span className='cursor-pointer text-blue-400 hover:text-blue-600 font-semibold' onClick={() => {
+                            <Button className='bg-white text-black rounded-2xl p-0 px-2'> <span className='cursor-pointer text-blue-400 hover:text-blue-600 font-semibold text-sm' onClick={() => {
                             }}>Following</span></Button>
                           </MenuHandler>
                           <MenuList className='flex flex-col z-20'>
@@ -178,7 +190,7 @@ function Newsfeed() {
                           </MenuList>
                         </Menu>
                         :
-                        <span className='cursor-pointer text-blue-400 hover:text-blue-600 font-semibold' onClick={() => {
+                        <span className='cursor-pointer text-blue-400 hover:text-blue-600 font-semibold text-sm' onClick={() => {
                           handleFollow(item.userData[0]._id, item.userData[0].username)
                         }}>Follow</span>
                     }
@@ -195,6 +207,9 @@ function Newsfeed() {
                     {(item.userId === user[0]._id) ?
                       <MenuList className='flex flex-col z-20'>
                         <MenuItem className='hover:border hover:border-gray-300  py-2 rounded-2xl' onClick={() => {
+                          handlePostEdit(item)
+                        }}>Edit</MenuItem>
+                        <MenuItem className='hover:border hover:border-gray-300  py-2 rounded-2xl' onClick={() => {
                           handlePostDelete(item._id)
                         }}>Delete</MenuItem>
                       </MenuList>
@@ -206,18 +221,18 @@ function Newsfeed() {
                   </Menu>
                 </div>
               </div>
+              {postEditModalIsOpen && <PostEditModal setPostEditModalIsOpen={setPostEditModalIsOpen} />}
               {/* post area */}
 
               {item.description && <div className='px-3 pb-2 w-[500px] break-words'>
                 <span className='break-words'>{item.description}</span>
               </div>}
               <div onDoubleClick={() => {
-                console.log(item);
                 axiosInstance.get(`/likePost?postId=${item._id}&userId=${user[0]._id}`, config).then((resp) => {
-                  console.log(resp);
                   likeNotification(user[0]._id, user[0].username, item.userData[0]._id, item._id)
                   //sent notification to socket
                   socket.current.emit('sendNotification', item.userData[0]._id)
+                  setNewNotification(!newNotification)
                   setChange(!change)
                 })
               }}>
@@ -228,28 +243,29 @@ function Newsfeed() {
                 <div className='flex justify-between px-4 py-3'>
                   <div className='flex gap-8 text-3xl font-bold text-gray-700'>
                     <div className='flex justify-center items-center gap-3'>
-                    {(item.likes.filter(elem => elem.refUser === user[0]._id)).length ?
-                      <FaHeart className='dislike' color='red' onClick={() => {
-                        axiosInstance.get(`/dislikePost?postId=${item._id}&userId=${user[0]._id}`, config).then(() => {
-                          disLikeNotification(user[0]._id, item.userData[0]._id, item._id)
-                          setChange(!change)
-                        })
-                      }} />
-                      :
-                      <FaRegHeart className='like hover:text-gray-300' onClick={() => {
-                        axiosInstance.get(`/likePost?postId=${item._id}&userId=${user[0]._id}`, config).then(() => {
-                          likeNotification(user[0]._id, user[0].username, item.userData[0]._id, item._id)
-                          //sent notification to socket
-                          socket.current.emit('sendNotification', item.userData[0]._id)
-                          setChange(!change)
-                        })
-                      }} />
-                    }
-                    {item.likes.length ? <div className='text-sm'>{item.likes?.length}</div>: ''}
+                      {(item.likes.filter(elem => elem.refUser === user[0]._id)).length ?
+                        <FaHeart className='dislike' color='red' onClick={() => {
+                          axiosInstance.get(`/dislikePost?postId=${item._id}&userId=${user[0]._id}`, config).then(() => {
+                            disLikeNotification(user[0]._id, item.userData[0]._id, item._id)
+                            setChange(!change)
+                          })
+                        }} />
+                        :
+                        <FaRegHeart className='like hover:text-gray-300' onClick={() => {
+                          axiosInstance.get(`/likePost?postId=${item._id}&userId=${user[0]._id}`, config).then(() => {
+                            likeNotification(user[0]._id, user[0].username, item.userData[0]._id, item._id)
+                            //sent notification to socket
+                            socket.current.emit('sendNotification', item.userData[0]._id)
+                            setNewNotification(!newNotification)
+                            setChange(!change)
+                          })
+                        }} />
+                      }
+                      {item.likes.length ? <div className='text-sm'>{item.likes?.length}</div> : ''}
                     </div>
                     <div className='flex  justify-center items-center gap-3'>
-                    <FaRegComment className='self-start hover:text-gray-400' onClick={() => handleAccordionOpen(item._id)} />
-                    {item.comments.length ? <div className='text-sm'>{item.comments?.length} </div> : ''}
+                      <FaRegComment className='self-start hover:text-gray-400' onClick={() => handleAccordionOpen(item._id)} />
+                      {item.comments.length ? <div className='text-sm'>{item.comments?.length} </div> : ''}
                     </div>
                     {/* <FiSend/  */}
                   </div>
@@ -269,7 +285,7 @@ function Newsfeed() {
                                   <img className='w-7 h-7 rounded-full outline outline-offset-2 outline-2 outline-[#0e1efb] cursor-pointer' src={elem.refUserProfileImg} alt="" />
                                 </div>
                                 <span className='text-base font-semibold'>{elem.refUsername}</span>
-                                <span onClick={() => console.log(elem, elem.refUser, user[0]._id)}>{elem.comment}</span>
+                                <span >{elem.comment}</span>
                                 <span>{format(elem.time)}</span>
                               </div>
                               {/* <AiOutlineEllipsis className='text-lg cursor-pointer' /> */}
@@ -284,7 +300,6 @@ function Newsfeed() {
                                   {user[0]._id === elem.refUser ?
                                     <MenuItem className='hover:border hover:border-gray-400  py-2 rounded-2xl' onClick={() => {
                                       handleDeleteComment(item._id, elem._id).then((resp) => {
-                                        console.log(user[0]._id, item.userId, item._id);
                                         deleteCommentNotification(user[0]._id, item.userId, item._id)
                                         setChange(!change)
                                       })

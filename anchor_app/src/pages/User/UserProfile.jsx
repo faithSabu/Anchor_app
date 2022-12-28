@@ -1,5 +1,5 @@
 import '../../assets/stylesheets/user/profile.css'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import Navbar from '../../components/User/Navbar'
 import Sidebar from '../../components/User/Sidebar'
 import { FaRegUserCircle, FaUserCog, FaRegArrowAltCircleLeft } from "react-icons/fa";
@@ -11,6 +11,11 @@ import { addNewChat } from '../../api/ChatRequests';
 import PostViewModal from '../../components/User/Modal/PostViewModal';
 import { modalContext } from '../../context/Context';
 import FollowListModal from '../../components/User/Modal/FollowListModal';
+import {
+  Menu, MenuHandler, MenuList, MenuItem, Button,
+} from "@material-tailwind/react";
+import { doFollow, doUnfollow, followNotification, unfollowNotification } from '../../api/UserRequests';
+import { io } from 'socket.io-client'
 // import ProfileSettings from '../../components/User/ProfileSettings';
 
 function UserProfile() {
@@ -29,7 +34,10 @@ function UserProfile() {
   const [profileChange, setProfileChange] = useState(false)
   const [followListModalOpen, setFollowListModalOpen] = useState(false)
   const [heading, setHeading] = useState('')
-  const [followList,setFollowList] = useState([])
+  const [followList, setFollowList] = useState([])
+  const [newNotification, setNewNotification] = useState(false)
+  const [isFollow,setIsFollow] = useState(false)
+  const socket = useRef()
   // const [settingsOpen, setsettingsOpen] = useState(false)
 
   //modals
@@ -54,7 +62,29 @@ function UserProfile() {
       setUsername(resp.data[0].username)
       setUserDetails(resp.data[0])
     })
-  }, [location.state.userId])
+  }, [location.state.userId,isFollow])
+
+  const handleFollow = async(refUserId, refUsername) => {
+    doFollow(user[0]._id, user[0].username, refUserId, refUsername).then(resp => {
+      resp.data = [resp.data]
+      localStorage.setItem("user", JSON.stringify(resp.data));
+      let result = followNotification(user[0]._id, user[0].username, refUserId)
+      setIsFollow(!isFollow)
+
+      //sent notification to socket
+      // socket.current.emit('sendNotification', refUserId)
+      // setNewNotification(!newNotification)
+    })
+  }
+
+  const handleUnfollow = (refUserId) => {
+    doUnfollow(user[0]._id, refUserId).then(resp => {
+      resp.data = [resp.data]
+      localStorage.setItem("user", JSON.stringify(resp.data));
+      setIsFollow(!isFollow)
+      unfollowNotification(user[0]._id, refUserId)
+    })
+  }
 
 
   return (
@@ -75,8 +105,30 @@ function UserProfile() {
                 <div className='text-4xl'>{username}</div>
                 <div className='flex ml-5 w-1/2 justify-around items-center'>
                   {/* <div>{username}</div> */}
+                  {/* <div>
+                    <button className='followBtnUserProfile px-2 py-1 border-2 border-gray-400 hover:border-white'>Following</button>
+                  </div> */}
+                  {userDetails.followers && userDetails.followers.find(elem => elem.refUserId === user[0]._id)
+                    ?
+                    <Menu placement="right-start">
+                      <MenuHandler>
+                        <Button className='bg-white text-black rounded-2xl p-0 px-2'> <span className='cursor-pointer text-blue-400 hover:text-blue-600 font-semibold text-sm' onClick={() => {
+                        }}>Following</span></Button>
+                      </MenuHandler>
+                      <MenuList className='flex flex-col z-20'>
+                        <MenuItem className='hover:border hover:border-gray-300  py-2 rounded-2xl' onClick={() => {
+                          handleUnfollow(userDetails._id)
+                        }}>Unfollow</MenuItem>
+                      </MenuList>
+                    </Menu>
+                    :
+                    <span className='cursor-pointer text-blue-400 hover:text-blue-600 font-semibold text-sm' onClick={() => {
+                      handleFollow(userDetails._id, userDetails.username)
+                    }}>Follow</span>
+                  }
                   <div>
-                    <button className='messageBtnUserProfile px-2 py-1 border-2 border-gray-400' onClick={() => {
+                    <button className='messageBtnUserProfile px-2 py-1 border-2 border-gray-400 hover:border-white' onClick={() => {
+                      console.log(userDetails);
                       addNewChat(user[0]._id, userDetails._id).then((resp) => {
                         navigate('/chat', { state: { chat: resp.data } })
                       })

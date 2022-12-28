@@ -12,3 +12,4 @@ const config= {
   export const ReportComment = ()=>''
   export const deleteCommentNotification = (commentedUserId, postUserId, postId)=>axiosInstance.get(`/deleteCommentNotification?commentedUserId=${commentedUserId}&postUserId=${postUserId}&postId=${postId}`,config)
   export const getSinglePostData=(postId) => axiosInstance.get(`/getSinglePostData?postId=${postId}`,config)
+  export const updatePost = (postId, description) => axiosInstance.get(`/updatePost?postId=${postId}&description=${description}`,config)

@@ -97,15 +97,6 @@ function Modal() {
                                         </div>
                                         {/* Post Description */}
                                     </div>
-                                    {/* <div className='h-1/2 bg-blue-200 relative'>
-                                <div onClick={() => {
-                                    saveToDB()
-                                    setPostUploadModalIsopen(false)
-                                }}
-                                    className='absolute bottom-0 right-0 left-0  mx-10 bg-green-600 px-8 py-2 rounded-3xl cursor-pointer hover:bg-green-500 text-white text-center'>
-                                    <span>Post</span>
-                                </div>
-                            </div> */}
                                 </div>
                             </div>
                             <div className='py-2 px-10 flex justify-end border-t-2'>

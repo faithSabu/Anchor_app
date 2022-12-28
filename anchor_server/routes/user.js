@@ -42,6 +42,7 @@ router.get('/deleteCommentNotification', isAuth, userControllers.deleteCommentNo
 router.get('/getSinglePostData', isAuth, userControllers.getSinglePostData)
 router.get('/getNotificationLength',isAuth,userControllers.getNotificationLength)
 router.get('/getFollowList',isAuth,userControllers.getFollowList)
+router.get('/updatePost',isAuth,userControllers.updatePost)
 router.get('/isAuthTest', (req, res) => {
   try {
     const userId = isAuth(req, res)
