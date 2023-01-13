@@ -1,9 +1,11 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getUser } from '../../api/UserRequests'
 
 function Conversation({ data, currentUserId, online ,topChat}) {
     const [userData, setUserData] = useState(null)
+    const navigate = useNavigate()
     useEffect(() => {
         const userId = data.members.find(id => id !== currentUserId)
         const getUserData = async () => {
@@ -11,7 +13,7 @@ function Conversation({ data, currentUserId, online ,topChat}) {
                 const { data } = await getUser(userId)
                 setUserData(data)
             } catch (error) {
-                console.log(error);
+                navigate('/error')
             }
         }
         getUserData()

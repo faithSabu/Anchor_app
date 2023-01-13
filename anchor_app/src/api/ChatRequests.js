@@ -1,6 +1,5 @@
 import axiosInstance from '../config/baseUrl'
 const jwtToken = localStorage.getItem('jwtToken')
-console.log(jwtToken,'jwttoken at chatrequets');
 const config= {
     credentials:'include',
     headers:{

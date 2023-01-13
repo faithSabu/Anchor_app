@@ -35,7 +35,7 @@ function Signup() {
             if (registered) {
                 navigate('/otp')
             }
-        })
+        }).catch(()=>navigate('/error'))
     }
 
     const { values, errors, formError, handleChange, handleSubmit } = useForm(formLogin)

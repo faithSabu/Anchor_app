@@ -10,5 +10,9 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/login',adminControllers.login)
+router.get('/getAllUsers',adminControllers.getAllUsers)
+router.get('/blockUnblockUser',adminControllers.blockUnblockUser)
+router.get('/getReportedPosts',adminControllers.getReportedPosts)
+router.get('/deletePost',adminControllers.deletePost)
 
 module.exports = router;

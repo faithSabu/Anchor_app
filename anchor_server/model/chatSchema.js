@@ -8,7 +8,10 @@ const ChatSchema = mongoose.Schema(
     },
     {
         timestamps:true,
-    }
+    },
+    
+       
+    
 )
 const ChatModel = mongoose.model("Chat",ChatSchema)
 

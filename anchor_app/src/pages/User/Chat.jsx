@@ -1,14 +1,17 @@
 import '../../assets/stylesheets/user/chat.css'
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useContext } from 'react'
 import Conversation from '../../components/User/Conversation';
 import { userChats } from '../../api/ChatRequests';
 import { io } from 'socket.io-client'
 import Chatbox from '../../components/User/Chatbox';
 import Navbar from '../../components/User/Navbar';
 import Sidebar from '../../components/User/Sidebar';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { messageRead } from '../../api/MessageRequest';
+import { notificationContext } from '../../context/NotificationContext';
 
 function Chat() {
+    const { notification, setNotification,messageNotification,setMessageNotification } = useContext(notificationContext)
     const userString = localStorage.getItem('user')
     const user = JSON.parse(userString);
     const [chats, setChats] = useState([])
@@ -17,6 +20,8 @@ function Chat() {
     const [sendMessage, setSendMessage] = useState(null)
     const [receivedMessage, setReceiveMessage] = useState(null)
     const [topChat,setTopChat] = useState(false)
+    const [receiverUser,setReceiverUser] = useState('')
+    const navigate = useNavigate()
     const location = useLocation();
     const socket = useRef()
 
@@ -39,6 +44,7 @@ function Chat() {
     useEffect(() => {
         socket.current.on('receive-message', (data) => {
             setReceiveMessage(data)
+            setMessageNotification(!messageNotification)
         })
     }, [sendMessage])
 
@@ -48,7 +54,7 @@ function Chat() {
                 const { data } = await userChats(user[0]._id)
                 setChats(data)
             } catch (error) {
-                console.log(error);
+                navigate('/error')
             }
         }
         getChats()
@@ -75,6 +81,9 @@ function Chat() {
                                     {chats&&chats.map(chat => (
                                         <div key={chat._id} onClick={() => {
                                             setCurrentChat(chat)
+                                            let result = chat.members.find((item)=>item !== user[0]._id)
+                                            setReceiverUser(result)
+                                            messageRead(chat._id).catch(err=>console.log(err))
                                         }}>
                                             <Conversation data={chat} currentUserId={user[0]._id} online={checkOnlineStatus(chat)} />
                                         </div>
@@ -86,7 +95,7 @@ function Chat() {
                         {/* right side */}
                         <div className="Right-side-chat">
                             {/* chat body */}
-                            <Chatbox chat={currentChat || location?.state?.chat} currentUser={user[0]._id} setSendMessage={setSendMessage} receivedMessage={receivedMessage} topChat={topChat} setTopChat={setTopChat} />
+                            <Chatbox chat={currentChat || location?.state?.chat} currentUser={user[0]._id} receiverUser={receiverUser || location?.state?.receiverUser} setSendMessage={setSendMessage} receivedMessage={receivedMessage} topChat={topChat} setTopChat={setTopChat} />
                         </div>
                     </div>
                 </div>

@@ -8,7 +8,6 @@ function OTP() {
     const [otp, setotp] = useState('')
     const [otpErr, setotpErr] = useState(false)
     const navigate = useNavigate();
-
     const [minutes, setMinutes] = useState(0);
     const [seconds, setSeconds] = useState(30);
 
@@ -55,7 +54,7 @@ function OTP() {
                     }
                 })
             }
-        })
+        }).catch(()=>navigate('/error'))
     }
 
     function resendOTP() {
@@ -63,7 +62,7 @@ function OTP() {
         setSeconds(30);
         axiosInstance.get('/resendOTP').then(resp => {
             console.log(resp);
-        })
+        }).catch(()=>navigate('/error'))
     }
 
     return (

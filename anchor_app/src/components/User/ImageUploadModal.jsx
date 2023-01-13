@@ -3,6 +3,7 @@ import Modal from 'react-modal'
 import { FaRegImages } from "react-icons/fa";
 import axiosInstance from '../../config/baseUrl';
 import Swal from 'sweetalert2'
+import { useNavigate } from 'react-router-dom';
 
 function ImageUploadModal(props) {
 
@@ -12,6 +13,7 @@ function ImageUploadModal(props) {
     const userString = localStorage.getItem('user')
     const user = JSON.parse(userString)
     const jwtToken = localStorage.getItem('jwtToken')
+    const navigate = useNavigate()
 
     const [viewImage,setViewImage] =useState(null);
 
@@ -32,7 +34,7 @@ function ImageUploadModal(props) {
             .then(data => {
                 setImage(data.url)
             })
-            .catch(err => console.log(err))
+            .catch(()=>navigate('/error'))
     }
 
     const saveToDB = () => {
@@ -53,7 +55,7 @@ function ImageUploadModal(props) {
                     timer: 1500
                   })
             }
-        }).catch(err=>console.log(err))
+        }).catch(()=>navigate('/error'))
     }
     return (
         <div>

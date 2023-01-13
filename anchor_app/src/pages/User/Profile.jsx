@@ -17,7 +17,6 @@ function Profile() {
     const userString = localStorage.getItem('user')
     const user = JSON.parse(userString)
     const jwtToken = localStorage.getItem('jwtToken')
-
     const navigate = useNavigate();
     const [posts, setPosts] = useState([])
     const [profileImage, setProfileImage] = useState('');
@@ -75,7 +74,7 @@ function Profile() {
                     localStorage.setItem("user", JSON.stringify(resp.data));
                 })
             })
-            .catch(err => console.log(err))
+            .catch(() => navigate('/error'))
 
     }
     return (
@@ -105,17 +104,17 @@ function Profile() {
                                 <span>{userDetails.following ? userDetails.following?.length : '0'} Following</span> */}
 
                                 <span onClick={() => {
-                  setFollowListModalOpen(true)
-                  setHeading('Followers')
-                  setFollowList(userDetails.followers)
-                }}>{userDetails.followers ? userDetails.followers?.length : '0'} Followers</span>
-                <span onClick={() => {
-                  setFollowListModalOpen(true)
-                  setHeading('Following')
-                  setFollowList(userDetails.following)
-                }}>{userDetails.following ? userDetails.following?.length : '0'} Following</span>
+                                    setFollowListModalOpen(true)
+                                    setHeading('Followers')
+                                    setFollowList(userDetails.followers)
+                                }}>{userDetails.followers ? userDetails.followers?.length : '0'} Followers</span>
+                                <span onClick={() => {
+                                    setFollowListModalOpen(true)
+                                    setHeading('Following')
+                                    setFollowList(userDetails.following)
+                                }}>{userDetails.following ? userDetails.following?.length : '0'} Following</span>
 
-                                
+
                             </div>
                             <div>
                                 <span className='text-lg'>{name}</span>

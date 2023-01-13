@@ -53,7 +53,10 @@ module.exports = {
                 {_id:req.query.chatId},
                 {updatedAt:Date.now()}
             ).then(resp=>{
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
                 res.status(200).json(resp)
+            }).catch((err)=>{
+                res.status(500).json(err)
             })
         } catch (error) {
             res.status(500).json(error)

@@ -1,8 +1,7 @@
-import React, { useContext, useEffect } from 'react'
+import React  from 'react'
 import Navbar from '../../components/User/Navbar'
 import Newsfeed from '../../components/User/Newsfeed'
 import Sidebar from '../../components/User/Sidebar'
-import { modalContext } from '../../context/Context'
 
 function Home() {
 

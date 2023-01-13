@@ -12,10 +12,12 @@ function PostComments({item,accordionOpen,setAccordionOpen,change}) {
     setAccordionOpen(accordionOpen === value ? 0 : value);
   };
   // Accordion session
-  useEffect(() => {
+
+  // useEffect(() => {
     
   
-  }, [change])
+  // }, [change])
+  
   return (
     
     <div>
@@ -31,7 +33,7 @@ function PostComments({item,accordionOpen,setAccordionOpen,change}) {
                                   <img className='w-7 h-7 rounded-full outline outline-offset-2 outline-2 outline-[#0e1efb] cursor-pointer' src={elem.refUserProfileImg} alt="" />
                                 </div>
                                 <span className='text-base font-semibold'>{elem.refUsername}</span>
-                                <span onClick={()=>console.log(elem)}>{elem.comment}</span>
+                                <span>{elem.comment}</span>
                               </div>
                               <span>{format(elem.time)}</span>
                               <AiOutlineEllipsis className='text-lg cursor-pointer' />

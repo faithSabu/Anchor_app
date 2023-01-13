@@ -30,7 +30,7 @@ function ChangePasswordForm() {
     },config).then(resp => {
       if (!(resp.data)) setIncorrectPass(true)
       else setIncorrectPass(false)
-    })
+    }).catch(()=>navigate('/error'))
   }
 
   const handleChange = (e) => {
@@ -64,7 +64,7 @@ function ChangePasswordForm() {
       }else{
         alert('Something Error')
       }
-    })
+    }).catch(()=>navigate('/error'))
   }
 
   return (

@@ -6,14 +6,16 @@ import { getUser } from '../../api/UserRequests';
 import { format } from 'timeago.js'
 import InputEmoji from 'react-input-emoji'
 import { updateTime } from '../../api/ChatRequests';
+import { useNavigate } from 'react-router-dom';
 
-function Chatbox({ chat, currentUser, setSendMessage, receivedMessage, online,topChat,setTopChat }) {
+function Chatbox({ chat, currentUser,receiverUser, setSendMessage, receivedMessage, online,topChat,setTopChat }) {
   const [userData, setUserData] = useState(null);
   const [messages, setMessages] = useState([])
   const [newMessages, setNewMessages] = useState('')
   const [sendButtonDisabled, setSendButtonDisabled] = useState(true)
+  const navigate = useNavigate()
   const scroll = useRef()
-
+  
   useEffect(() => {
     if (receivedMessage && receivedMessage.chatId === chat._id) {
       setMessages([...messages, receivedMessage])
@@ -58,18 +60,20 @@ function Chatbox({ chat, currentUser, setSendMessage, receivedMessage, online,to
     if (newMessages.trim().length > 0) {
       const message = {
         senderId: currentUser,
+        receiverUser,
         text: newMessages,
         chatId: chat._id,
       }
       // send message to db
       try {
+        console.log(message,'to db message');
         const { data } = await addMessage(message)
         setMessages([...messages, data])
         setNewMessages('')
         updateTime(chat._id)
         setTopChat(!topChat)
       } catch (error) {
-        console.log(error);
+        navigate('/error')
       }
 
       //send message to socket server

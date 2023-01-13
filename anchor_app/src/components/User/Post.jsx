@@ -52,7 +52,7 @@ function Post({ item, change, setChange }) {
         setChange(!change)
         setpostUploaded(!postUploaded)
         setCommentButtonDisabled(0)
-      })
+      }).catch(()=>navigate('/error'))
   }
 
   const handlePostDelete = (postId) => {
@@ -79,7 +79,7 @@ function Post({ item, change, setChange }) {
             'success'
           )
           setChange(!change)
-        })
+        }).catch(()=>navigate('/error'))
       }
     })
   }
@@ -89,7 +89,7 @@ function Post({ item, change, setChange }) {
       setIsFollow(!isFollow)
       resp.data = [resp.data]
       localStorage.setItem("user", JSON.stringify(resp.data));
-    })
+    }).catch(()=>navigate('/error'))
   }
 
   const handleUnfollow = (refUserId) => {
@@ -97,7 +97,7 @@ function Post({ item, change, setChange }) {
       setIsFollow(!isFollow)
       resp.data = [resp.data]
       localStorage.setItem("user", JSON.stringify(resp.data));
-    })
+    }).catch(()=>navigate('/error'))
   }
   return (
     <div key={item._id} className={`bg-white my-5 rounded-2xl border border-gray-400 overflow-hidden min-w-[500px]`}>

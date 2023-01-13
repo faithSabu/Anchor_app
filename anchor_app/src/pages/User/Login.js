@@ -12,6 +12,7 @@ function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('')
     const [loginErr, setLoginErr] = useState(false)
+    const [userBlocked,setUserBlocked] = useState(false)
 
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -20,6 +21,7 @@ function Login() {
         }).then(response => {
             console.log(response.data);
             if (response.data.invalidUser) setLoginErr(true)
+            if(response.data.blocked) setUserBlocked(true)
             if (response.data.user) {
                 localStorage.setItem("isAuthenticated", "true");
                 localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -27,7 +29,7 @@ function Login() {
                 // axiosInstance.defaults.headers.common['authorization'] = `Bearer ${response.data.accessToken}` 
                 navigate('/')
             }
-        })
+        }).catch(()=>navigate('/error'))
     }
 
 
@@ -70,6 +72,7 @@ function Login() {
 
                                 <button type="submit" className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Sign in</button>
                                 {loginErr && <small className='text-red-600'>Invalid Username or Password</small>}
+                                {userBlocked && <small className='text-red-600'>Sorry!!! You have been blocked</small>}
                                 <div className='flex justify-center'>
                                     <Link to='/signup'>
                                         <p className="text-sm font-light text-gray-500 dark:text-gray-400 cursor-pointer hover:underline">

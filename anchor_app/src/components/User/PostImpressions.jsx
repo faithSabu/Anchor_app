@@ -1,5 +1,6 @@
 import React, { useContext, useState,useEffect } from 'react'
 import { FaRegHeart, FaHeart, FaRegComment, FaRegShareSquare, FaRegBookmark, FaEllipsisH, FaRegSmileWink, FaEllipsisV } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../config/baseUrl';
 import { modalContext } from '../../context/Context';
 import PostComments from './PostComments';
@@ -13,6 +14,7 @@ function PostImpressions({ item,change,setChange }) {
     const [commentButtonDisabled, setCommentButtonDisabled] = useState(0)
     const [commentInput, setCommentInput] = useState('')
     const [myComment, setMyComment] = useState('');
+    const navigate = useNavigate()
 
     useEffect(() => {
       
@@ -39,7 +41,7 @@ function PostImpressions({ item,change,setChange }) {
         setChange(!change)
         setpostUploaded(!postUploaded)
         setCommentButtonDisabled(0)
-      })
+      }).catch(()=>navigate('/error'))
   }
 
     return (
@@ -58,7 +60,7 @@ function PostImpressions({ item,change,setChange }) {
                                     },
                                   }).then(() => {
                                     setChange(!change)
-                                })
+                                }).catch(()=>navigate('/error'))
                             }} />
                             :
                             <FaRegHeart className='like hover:text-gray-300' onClick={() => {
@@ -70,7 +72,7 @@ function PostImpressions({ item,change,setChange }) {
                                     },
                                   }).then(() => {
                                     setChange(!change)
-                                })
+                                }).catch(()=>navigate('/error'))
                             }} />
                         }
                         <FaRegComment onClick={() => handleAccordionOpen(item._id)} />

@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react'
 import { modalContext } from '../../../context/Context';
 import Swal from 'sweetalert2'
 import { updatePost } from '../../../api/PostRequests';
+import { useNavigate } from 'react-router-dom';
 
 
 function PostEditModal({ setPostEditModalIsOpen }) {
@@ -12,18 +13,23 @@ function PostEditModal({ setPostEditModalIsOpen }) {
     const user = JSON.parse(userString)
     const jwtToken = localStorage.getItem('jwtToken')
     const [disableUpdateBtn, setDisableUpdateBtn] = useState(true)
+    const navigate = useNavigate()
 
     const saveToDB = async () => {
-        let result = await updatePost(postEditDetails.postId, description)
-        if (result) {
-            setpostUploaded(!postUploaded)
-            Swal.fire({
-                position: 'center',
-                icon: 'success',
-                title: 'Your Post has been Updated',
-                showConfirmButton: false,
-                timer: 1500
-            })
+        try {
+            let result = await updatePost(postEditDetails.postId, description)
+            if (result) {
+                setpostUploaded(!postUploaded)
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Your Post has been Updated',
+                    showConfirmButton: false,
+                    timer: 1500
+                })
+            }
+        } catch (error) {
+            navigate('/error')
         }
     }
 

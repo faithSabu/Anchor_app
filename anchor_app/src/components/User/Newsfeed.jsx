@@ -14,10 +14,11 @@ import { commentNotification, disLikeNotification, doFollow, doUnfollow, followN
 import UserProfile from '../../pages/User/UserProfile';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'timeago.js'
-import { deleteCommentNotification, handleDeleteComment, ReportComment } from '../../api/PostRequests';
+import { deleteCommentNotification, editComment, handleDeleteComment } from '../../api/PostRequests';
 import { io } from 'socket.io-client'
 import { notificationContext } from '../../context/NotificationContext';
 import PostEditModal from './Modal/PostEditModal';
+import ReportModal from './Modal/ReportModal';
 
 
 
@@ -35,7 +36,12 @@ function Newsfeed() {
   const [commentInput, setCommentInput] = useState('')
   const [newNotification, setNewNotification] = useState(false)
   const [isFollow, setIsFollow] = useState(false)
-  const [postEditModalIsOpen,setPostEditModalIsOpen] = useState(false)
+  const [postEditModalIsOpen, setPostEditModalIsOpen] = useState(false)
+  const [edittingComment, setEdittingComment] = useState(''); 
+  const [reportModalIsOpen, setReportModalIsOpen] = useState(false)
+  const [reportValue, setReportValue] = useState('')
+  const [reportCommentId, setReportCommentId] = useState('')
+  const [reportPostId, setReportPostId] = useState('')
   const socket = useRef()
   const config = {
     credentials: 'include',
@@ -58,7 +64,7 @@ function Newsfeed() {
   useEffect(() => {
     axiosInstance.get(`/getAllPosts`, config).then(resp => {
       setPosts(resp.data)
-    })
+    }).catch(()=>navigate('/error'))
   }, [change, postUploaded, isFollow])
 
   // Accordion session
@@ -75,15 +81,31 @@ function Newsfeed() {
         setChange(!change)
         setpostUploaded(!postUploaded)
         setCommentButtonDisabled(0)
-        commentNotification(user[0]._id, username, postUserId, postId)
+        commentNotification(user[0]._id, username, postUserId, postId).then(()=>{
+        }).catch((err)=>{
+          navigate('/error')
+        })
 
         //sent notification to socket
         socket.current.emit('sendNotification', postUserId)
         setNewNotification(!newNotification)
 
       }).catch(err => {
-        console.log(err, 'err at postcomment');
+        navigate('/error')
       })
+  }
+
+  const handleEditComment = async (e, postId, commentId) => {
+    e.preventDefault()
+    try {
+      let result = await editComment(postId, commentId, myComment)
+      if (result) {
+        setChange(!change)
+        setEdittingComment('')
+      }
+    } catch (error) {
+      navigate('/error')
+    }
   }
 
   useEffect(() => {
@@ -95,7 +117,7 @@ function Newsfeed() {
 
   const handlePostEdit = (postData) => {
     setPostEditDetails({
-      postId:postData._id,
+      postId: postData._id,
       postUrl: postData.postUrl,
       description: postData.description
     })
@@ -120,7 +142,7 @@ function Newsfeed() {
             'success'
           )
           setChange(!change)
-        })
+        }).catch(()=>navigate('/error'))
       }
     })
   }
@@ -130,12 +152,12 @@ function Newsfeed() {
       setIsFollow(!isFollow)
       resp.data = [resp.data]
       localStorage.setItem("user", JSON.stringify(resp.data));
-      let result = followNotification(user[0]._id, user[0].username, refUserId)
+      let result = followNotification(user[0]._id, user[0].username, refUserId).catch(()=>navigate('/error'))
 
       //sent notification to socket
       socket.current.emit('sendNotification', refUserId)
       setNewNotification(!newNotification)
-    })
+    }).catch(()=>navigate('/error'))
   }
 
   const handleUnfollow = (refUserId) => {
@@ -143,8 +165,8 @@ function Newsfeed() {
       setIsFollow(!isFollow)
       resp.data = [resp.data]
       localStorage.setItem("user", JSON.stringify(resp.data));
-      unfollowNotification(user[0]._id, refUserId)
-    })
+      unfollowNotification(user[0]._id, refUserId).catch(()=>navigate('/error'))
+    }).catch(()=>navigate('/error'))
   }
 
   return (
@@ -170,7 +192,10 @@ function Newsfeed() {
                       </div>
                     </Link>
                   }
-                  <div className='cursor-pointer'>{item.userData[0].username}</div>
+                  <div>
+                    <div className='cursor-pointer mb-[-3px]'>{item.userData[0].username}</div>
+                    <div><span className='text-xs'>{format(item.createdDate)}</span></div>
+                  </div>
                   <div>
                     {item.userData[0]._id === user[0]._id
                       ?
@@ -180,7 +205,7 @@ function Newsfeed() {
                         ?
                         <Menu placement="right-start">
                           <MenuHandler>
-                            <Button className='bg-white text-black rounded-2xl p-0 px-2'> <span className='cursor-pointer text-blue-400 hover:text-blue-600 font-semibold text-sm' onClick={() => {
+                            <Button className='bg-white text-black rounded-2xl p-0 px-2 shadow-none'> <span className='cursor-pointer text-blue-400 hover:text-blue-600 font-semibold text-sm' onClick={() => {
                             }}>Following</span></Button>
                           </MenuHandler>
                           <MenuList className='flex flex-col z-20'>
@@ -214,14 +239,19 @@ function Newsfeed() {
                         }}>Delete</MenuItem>
                       </MenuList>
                       :
-                      <MenuList className='flex flex-col z-20'>
-                        <MenuItem className='hover:border hover:border-gray-300  py-2 rounded-2xl'>Report</MenuItem>
+                      <MenuList className='flex flex-col z-20 shadow-none' >
+                        <MenuItem className='hover:border hover:border-gray-300  py-2 rounded-2xl ' onClick={() => {
+                          setReportModalIsOpen(true)
+                          setReportValue('Post')
+                          setReportPostId(item._id)
+                        }}>Report</MenuItem>
                       </MenuList>
                     }
                   </Menu>
                 </div>
               </div>
               {postEditModalIsOpen && <PostEditModal setPostEditModalIsOpen={setPostEditModalIsOpen} />}
+              {reportModalIsOpen && <ReportModal setReportModalIsOpen={setReportModalIsOpen} reportValue={reportValue} postId={reportPostId} commentId={reportCommentId} />}
               {/* post area */}
 
               {item.description && <div className='px-3 pb-2 w-[500px] break-words'>
@@ -246,14 +276,14 @@ function Newsfeed() {
                       {(item.likes.filter(elem => elem.refUser === user[0]._id)).length ?
                         <FaHeart className='dislike' color='red' onClick={() => {
                           axiosInstance.get(`/dislikePost?postId=${item._id}&userId=${user[0]._id}`, config).then(() => {
-                            disLikeNotification(user[0]._id, item.userData[0]._id, item._id)
+                            disLikeNotification(user[0]._id, item.userData[0]._id, item._id).catch(()=>navigate('/error'))
                             setChange(!change)
                           })
                         }} />
                         :
                         <FaRegHeart className='like hover:text-gray-300' onClick={() => {
                           axiosInstance.get(`/likePost?postId=${item._id}&userId=${user[0]._id}`, config).then(() => {
-                            likeNotification(user[0]._id, user[0].username, item.userData[0]._id, item._id)
+                            likeNotification(user[0]._id, user[0].username, item.userData[0]._id, item._id).catch(()=>navigate('/error'))
                             //sent notification to socket
                             socket.current.emit('sendNotification', item.userData[0]._id)
                             setNewNotification(!newNotification)
@@ -279,41 +309,73 @@ function Newsfeed() {
                       <div className='accordion max-h-[20vh] overflow-y-scroll'>
                         {item.comments.length ? (item.comments.slice(0).reverse()).map(elem => {
                           return <div key={elem._id} className='p-2'>
-                            <div className='flex items-center justify-between'>
-                              <div className='flex gap-4 items-center'>
-                                <div>
-                                  <img className='w-7 h-7 rounded-full outline outline-offset-2 outline-2 outline-[#0e1efb] cursor-pointer' src={elem.refUserProfileImg} alt="" />
+                            {edittingComment === elem._id ?
+                              <div className='flex items-center justify-between' >
+                                <div className='flex gap-4 items-center w-full'>
+                                  <div>
+                                    <img className='w-7 h-7 rounded-full outline outline-offset-2 outline-2 outline-[#0e1efb] cursor-pointer' src={elem.refUserProfileImg} alt="" />
+                                  </div>
+                                  <span className='text-base font-semibold'>{elem.refUsername}</span>
+                                  <div className='w-full flex-1'>
+                                    <form onSubmit={(e) => {
+                                      handleEditComment(e, item._id, elem._id);
+                                    }} className='flex justify-between border-b border-black'>
+                                      <input type="text" value={elem.comment} onChange={(e) => {
+                                        elem.comment = e.target.value
+                                        setMyComment(e.target.value)
+                                      }} />
+                                      <button className='text-blue-500 font-semibold'>Submit</button>
+                                    </form>
+                                  </div>
                                 </div>
-                                <span className='text-base font-semibold'>{elem.refUsername}</span>
-                                <span >{elem.comment}</span>
-                                <span>{format(elem.time)}</span>
                               </div>
-                              {/* <AiOutlineEllipsis className='text-lg cursor-pointer' /> */}
+                              :
+                              <div className='flex items-center justify-between'>
+                                <div className='flex gap-4 items-center'>
+                                  <div>
+                                    <img className='w-7 h-7 rounded-full outline outline-offset-2 outline-2 outline-[#0e1efb] cursor-pointer' src={elem.refUserProfileImg} alt="" />
+                                  </div>
+                                  <span className='text-base font-semibold'>{elem.refUsername}</span>
+                                  <span >{elem.comment}</span>
+                                  <span>{format(elem.time)}</span>
+                                </div>
+                                {/* <AiOutlineEllipsis className='text-lg cursor-pointer' /> */}
 
-                              <Menu placement="left-start">
-                                <MenuHandler>
-                                  <Button className='bg-white text-black rounded-2xl p-0 px-2'>
-                                    <AiOutlineEllipsis className='text-lg cursor-pointer' />
-                                  </Button>
-                                </MenuHandler>
-                                <MenuList className='flex flex-col z-20 bg-gray-200'>
+                                <Menu placement="left-start">
+                                  <MenuHandler>
+                                    <Button className='bg-white text-black rounded-2xl p-0 px-2'>
+                                      <AiOutlineEllipsis className='text-lg cursor-pointer' />
+                                    </Button>
+                                  </MenuHandler>
                                   {user[0]._id === elem.refUser ?
-                                    <MenuItem className='hover:border hover:border-gray-400  py-2 rounded-2xl' onClick={() => {
-                                      handleDeleteComment(item._id, elem._id).then((resp) => {
-                                        deleteCommentNotification(user[0]._id, item.userId, item._id)
+                                    <MenuList className='flex flex-col z-20 bg-gray-200'>
+                                      <MenuItem className='hover:border hover:border-gray-400  py-2 rounded-2xl' onClick={() => {
+                                        setEdittingComment(elem._id)
                                         setChange(!change)
-                                      })
-                                    }}>Delete Comment</MenuItem>
+                                      }}>Edit Comment</MenuItem>
+                                      <MenuItem className='hover:border hover:border-gray-400  py-2 rounded-2xl' onClick={() => {
+                                        handleDeleteComment(item._id, elem._id).then((resp) => {
+                                          deleteCommentNotification(user[0]._id, item.userId, item._id)
+                                          setChange(!change)
+                                        })
+                                      }}>Delete Comment</MenuItem>
+                                    </MenuList>
                                     :
-                                    <MenuItem className='hover:border hover:border-gray-400  py-2 rounded-2xl' onClick={() => {
-                                      ReportComment(item.userData[0]._id)
-                                    }}>Report Comment</MenuItem>
+                                    <MenuList className='flex flex-col z-20 bg-gray-200'>
+                                      <MenuItem className='hover:border hover:border-gray-400  py-2 rounded-2xl' onClick={() => {
+                                        setReportModalIsOpen(true)
+                                        setReportValue('Comment')
+                                        setReportPostId(item._id)
+                                        setReportCommentId(elem._id)
+                                      }}>Report Comment</MenuItem>
+                                    </MenuList>
                                   }
-                                </MenuList>
-                              </Menu>
+                                </Menu>
 
 
-                            </div>
+                              </div>
+                            }
+
                           </div>
                         })
                           :

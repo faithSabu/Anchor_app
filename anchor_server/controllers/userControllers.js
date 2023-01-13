@@ -1,6 +1,6 @@
 const userServices = require('../services/userServices');
 const { createAccessToken, createRefreshToken, sendAccessToken, sendRefreshToken } = require('./tokens')
-const { isAuth } = require('../middlewares/IsAuth')
+const sanitize = require('mongo-sanitize');
 
 //from userServices
 require('dotenv').config()
@@ -8,6 +8,7 @@ require('dotenv').config()
 const USERS = require('../model/userSchema').users;
 const POSTS = require('../model/userSchema').posts;
 const NOTIFICATIONS = require('../model/notificationSchema').notifications
+const MESSAGES = require('../model/messageSchema').MessageModel
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer')
@@ -25,6 +26,8 @@ module.exports = {
         //     res.json(response)
         // })
         try {
+            const cleanEmail = sanitize(req.body.email);
+            const cleanUserNam= sanitize(req.body.username);
             let userExist = (await USERS.find({ email: req.body.email })).toString()
             // let userExist = (await USERS.find({ $or: [ { email: req.body.email  }, { username: req.body.username } ] } )).toString()
             if (userExist) return res.json({ userExist: true })
@@ -56,7 +59,6 @@ module.exports = {
                         res.json({ otp: 'sent' })
                     })
                 } catch (error) {
-                    console.log(error);
                     throw 'Nodemailer error'
                 }
             });
@@ -72,7 +74,8 @@ module.exports = {
         //     res.json(resp)
         // })
         try {
-            if (req.body.otp == otp) {
+            const cleanOTP = sanitize(req.body.otp);
+            if (cleanOTP == otp) {
                 USERS.create(userInfo).then((response) => {
                     otp = '';
                     userInfo = '';
@@ -114,23 +117,18 @@ module.exports = {
                 res.json({ otp: 'sent' })
             })
         } catch (error) {
-            console.log(error);
             res.status(500).json(error)
         }
     },
 
     login: async (req, res) => {
-        // userServices.doLogin(req.body).then(response => {
-        //     res.json(response)
-        // })
+        const cleanUser = sanitize(req.body.email);
         try {
-            let user = await USERS.find({ email: req.body.email })
-            console.log('no user');
+            let user = await USERS.find({ email: cleanUser })
             if (user.length > 0) {
-                console.log('user exist');
+                if(user[0].blocked) return res.json({blocked:true})
                 bcrypt.compare(req.body.password, user[0].password).then(async function (result) {
                     if (result) {
-
                         //jwt access and refresh tokens
                         const accessToken = await createAccessToken(user[0].email)
                         const refreshToken = await createRefreshToken(user[0].email)
@@ -308,7 +306,10 @@ module.exports = {
                         $set: { password: hash }
                     }
                 ).then(resp => {
-                    res.json({ updated: true })
+                    if (resp.modifiedCount === 0) throw 'Something went wrong!';
+                    res.status(200).json({ updated: true })
+                }).catch((err) => {
+                    res.status(500).json(err)
                 })
             })
         } catch (error) {
@@ -334,7 +335,10 @@ module.exports = {
                     }
                 }
             ).then(resp => {
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
                 res.json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
             })
         } catch (error) {
             res.status(500).json(error)
@@ -359,7 +363,10 @@ module.exports = {
                     }
                 }
             ).then(resp => {
+                if (resp.modifiedCount === 0) { throw 'Something went wrong!' };
                 res.json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
             })
         } catch (error) {
             res.status(500).json(error)
@@ -386,7 +393,10 @@ module.exports = {
                     }
                 }
             ).then(resp => {
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
                 res.json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
             })
         } catch (error) {
             res.status(500).json(error)
@@ -395,7 +405,6 @@ module.exports = {
 
     deleteComment: (req, res) => {
         const { postId, commentId } = req.query;
-        console.log(req.query);
         try {
             POSTS.updateOne(
                 {
@@ -409,8 +418,10 @@ module.exports = {
                     }
                 }
             ).then(resp => {
-                console.log(resp);
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
                 res.json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
             })
         } catch (error) {
             res.status(500).json(error)
@@ -435,7 +446,6 @@ module.exports = {
         //     res.json(resp)
         // })
         try {
-            console.log(req.params.userId);
             USERS.find({ _id: ObjectId(req.params.userId) }).then(resp => {
                 res.json(resp)
             })
@@ -539,7 +549,6 @@ module.exports = {
     },
 
     followNotification: async (req, res) => {
-        console.log(req.query, 'req.query at follownotification');
         const { refUserId, refUsername, userId } = req.query;
         let message = `${refUsername} started following you`
         try {
@@ -562,9 +571,14 @@ module.exports = {
                 }
             )
                 .then(resp => {
+                    console.log(resp, 'resp');
+                    // if (resp.modifiedCount === 0) throw 'Something went wrong!';
                     res.status(200)
+                }).catch((err) => {
+                    res.status(500).json(err)
                 })
         } catch (error) {
+            console.log(error, 'error');
             res.status(500).json(error)
         }
     },
@@ -588,7 +602,10 @@ module.exports = {
                     }
                 }
             ).then(resp => {
+                // if (resp.modifiedCount === 0) throw 'Something went wrong!';
                 res.json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
             })
         } catch (error) {
             res.status(500).json(error)
@@ -596,10 +613,12 @@ module.exports = {
     },
 
     getNotifications: async (req, res) => {
-        console.log(req.query);
         try {
-            NOTIFICATIONS.find({ $and: [{ userId: req.query.userId }, { "notifications.isRead": false }] })
+            NOTIFICATIONS.find({ $and: [{ userId: req.query.userId },
+                //  { "notifications.isRead": false }
+                ] })
                 .populate('notifications.refUserId')
+                .populate('notifications.postId')
                 .then(resp => {
                     {
                         resp[0] ?
@@ -634,7 +653,10 @@ module.exports = {
                 }
             )
                 .then(resp => {
+                    if (resp.modifiedCount === 0) throw 'Something went wrong!';
                     res.status(200)
+                }).catch((err) => {
+                    res.status(500).json(err)
                 })
         } catch (error) {
             res.status(500).json(error)
@@ -647,7 +669,6 @@ module.exports = {
             NOTIFICATIONS.updateOne(
                 {
                     userId: ObjectId(postUserId),
-
                 },
                 {
                     $pull: {
@@ -660,7 +681,11 @@ module.exports = {
                     }
                 }
             ).then(resp => {
+                console.log(resp);
+                // if (resp.modifiedCount === 0) throw 'Something went wrong!';
                 res.json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
             })
         } catch (error) {
             res.status(500).json(error)
@@ -689,7 +714,10 @@ module.exports = {
                 }
             )
                 .then(resp => {
-                    res.status(200)
+                    if (resp.modifiedCount === 0) throw 'Something went wrong!';
+                    res.status(200).json(resp)
+                }).catch((err) => {
+                    res.status(500).json(err)
                 })
         } catch (error) {
             res.status(500).json(error)
@@ -698,7 +726,6 @@ module.exports = {
 
     deleteCommentNotification: (req, res) => {
         const { commentedUserId, postUserId, postId } = req.query;
-        console.log(req.query);
         try {
             NOTIFICATIONS.updateOne(
                 {
@@ -716,7 +743,10 @@ module.exports = {
                     }
                 }
             ).then(resp => {
-                res.json(resp)
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
+                res.status(200).json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
             })
         } catch (error) {
             res.status(500).json(error)
@@ -753,12 +783,23 @@ module.exports = {
         }
     },
 
+    getMessageNotificationLength:(req,res)=>{
+        const {userId} = req.query;
+        try {
+            MESSAGES.find({receiverId:userId,isRead:false})
+            .then(resp=>{
+                res.status(200).json(resp?.length)
+            })
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+
     getFollowList: (req, res) => {
         const { userId, followType } = req.query;
         try {
             USERS.find({ _id: ObjectId(userId) }, followType)
                 .then(resp => {
-                    console.log(resp);
                     res.status(200).json(resp)
                 })
         } catch (error) {
@@ -774,10 +815,106 @@ module.exports = {
                 {
                     description: description
                 },
-                {upsert:true}
+                { upsert: true }
             ).then(resp => {
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
                 res.status(200).json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
             })
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+
+    editComment: (req, res) => {
+        const { postId, commentId, comment } = req.query;
+        try {
+            POSTS.updateOne(
+                { _id: ObjectId(postId), 'comments._id': ObjectId(commentId) },
+                { $set: { "comments.$.comment": comment } }
+            ).then(resp => {
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
+                res.status(200).json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
+            })
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+
+    reportPost: (req, res) => {
+        const { postId, reason } = req.query;
+        try {
+            POSTS.updateOne(
+                { _id: ObjectId(postId) },
+                {
+                    $set: {
+                        isReported: true,
+                    },
+                    $push: {
+                        reportReason: reason
+                    }
+                },
+                { upsert: true }
+            ).then(resp => {
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
+                res.status(200).json(resp)
+            }).catch((err) => {
+                res.status(500).json(err)
+            })
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+
+    reportComment: (req, res) => {
+        const { postId, commentId, reason } = req.query
+        try {
+            POSTS.updateOne(
+                {
+                    _id: ObjectId(postId),
+                    'comments._id': ObjectId(commentId)
+                },
+                {
+                    $set: {
+                        "comments.$.isReported": true,
+                    },
+                    $push: {
+                        "comments.$.reportReason": reason
+                    }
+                },
+                { upsert: true }
+            )
+                .then(resp => {
+                    if (resp.modifiedCount === 0) throw 'Something went wrong!';
+                    res.status(200).json(resp)
+                }).catch((err) => res.status(500).json(err))
+        } catch (error) {
+            res.status(500).json(error)
+        }
+
+    },
+
+    isReadNotification:(req,res)=>{
+        const {userId,notificationId} = req.query;
+        try {
+            NOTIFICATIONS.updateOne(
+                {
+                    userId: userId,
+                    'notifications._id': ObjectId(notificationId)
+                },
+                {
+                    $set: {
+                        "notifications.$.isRead": true,
+                    },
+                },
+            )
+            .then(resp => {
+                if (resp.modifiedCount === 0) throw 'Something went wrong!';
+                res.status(200).json(resp)
+            }).catch((err) => res.status(500).json(err))
         } catch (error) {
             res.status(500).json(error)
         }

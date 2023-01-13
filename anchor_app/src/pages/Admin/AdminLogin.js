@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import useForm from '../../../hooks/useForm';
-import axiosInstance from '../../../config/baseUrl';
+import useForm from '../../hooks/useForm';
+import axiosInstance from '../../config/baseUrl';
 import { useNavigate } from 'react-router-dom';
 
 function AdminLogin() {

@@ -12,6 +12,10 @@
    font-weight: bold;
   }
 
+  .iconsDiv a.active div.notification {
+   display: none;
+  }
+
 .iconsDiv:hover{
     background-color: rgb(227, 227, 227);
 }

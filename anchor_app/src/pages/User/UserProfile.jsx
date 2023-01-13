@@ -55,26 +55,26 @@ function UserProfile() {
   useEffect(() => {
     axiosInstance.get(`/getUserPosts?userId=${location.state.userId}`, config).then(resp => {
       setPosts(resp.data)
-    })
+    }).catch(()=>navigate('/error'))
     axiosInstance.get(`/getProfilerPicture?userId=${location.state.userId}`, config).then(resp => {
       setProfileImage(resp.data[0].profileImg)
       setName(resp.data[0].name)
       setUsername(resp.data[0].username)
       setUserDetails(resp.data[0])
-    })
+    }).catch(()=>navigate('/error'))
   }, [location.state.userId,isFollow])
 
   const handleFollow = async(refUserId, refUsername) => {
     doFollow(user[0]._id, user[0].username, refUserId, refUsername).then(resp => {
       resp.data = [resp.data]
       localStorage.setItem("user", JSON.stringify(resp.data));
-      let result = followNotification(user[0]._id, user[0].username, refUserId)
+      let result = followNotification(user[0]._id, user[0].username, refUserId).catch(()=>navigate('/error'))
       setIsFollow(!isFollow)
 
       //sent notification to socket
       // socket.current.emit('sendNotification', refUserId)
       // setNewNotification(!newNotification)
-    })
+    }).catch(()=>navigate('/error'))
   }
 
   const handleUnfollow = (refUserId) => {
@@ -82,8 +82,8 @@ function UserProfile() {
       resp.data = [resp.data]
       localStorage.setItem("user", JSON.stringify(resp.data));
       setIsFollow(!isFollow)
-      unfollowNotification(user[0]._id, refUserId)
-    })
+      unfollowNotification(user[0]._id, refUserId).catch(()=>navigate('/error'))
+    }).catch(()=>navigate('/error'))
   }
 
 
@@ -130,8 +130,8 @@ function UserProfile() {
                     <button className='messageBtnUserProfile px-2 py-1 border-2 border-gray-400 hover:border-white' onClick={() => {
                       console.log(userDetails);
                       addNewChat(user[0]._id, userDetails._id).then((resp) => {
-                        navigate('/chat', { state: { chat: resp.data } })
-                      })
+                        navigate('/chat', { state: { chat: resp.data ,receiverUser:userDetails._id} })
+                      }).catch(()=>navigate('/error'))
                     }}>Message</button>
                   </div>
                 </div>

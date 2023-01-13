@@ -4,11 +4,6 @@ const userControllers = require('../controllers/userControllers');
 const { verifyToken } = require('../middlewares/tokenMiddlewares')
 const { isAuth } = require('../middlewares/IsAuth')
 
-/* GET home page. */
-router.post('/', function (req, res, next) {
-  console.log('Reached backend');
-  res.status(500).json({ 'hai': 'hai' })
-});
 
 router.post('/signup', userControllers.generateOTP)
 router.post('/otp', userControllers.verifyOTP)
@@ -41,22 +36,14 @@ router.get('/commentNotification', isAuth, userControllers.commentNotification)
 router.get('/deleteCommentNotification', isAuth, userControllers.deleteCommentNotification)
 router.get('/getSinglePostData', isAuth, userControllers.getSinglePostData)
 router.get('/getNotificationLength',isAuth,userControllers.getNotificationLength)
+router.get('/getMessageNotificationLength',isAuth,userControllers.getMessageNotificationLength)
 router.get('/getFollowList',isAuth,userControllers.getFollowList)
 router.get('/updatePost',isAuth,userControllers.updatePost)
-router.get('/isAuthTest', (req, res) => {
-  try {
-    const userId = isAuth(req, res)
-    console.log(userId);
-    if (userId !== null) {
-      res.json({
-        data: 'is protected'
-      })
-    }
-  } catch (error) {
-    console.log(error);
-    res.json({ data: 'not auth' })
-  }
-})
+router.get('/editComment',isAuth,userControllers.editComment)
+router.get('/reportPost',isAuth,userControllers.reportPost)
+router.get('/reportComment',isAuth,userControllers.reportComment)
+router.get('/isReadNotification',isAuth,userControllers.isReadNotification)
+
 
 
 module.exports = router;

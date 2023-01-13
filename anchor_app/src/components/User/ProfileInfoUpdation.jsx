@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react'
 import axiosInstance from '../../config/baseUrl'
 import useFormProfileUpdate from '../../hooks/useFormProfileUpdate';
 import Swal from 'sweetalert2'
+import { useNavigate } from 'react-router-dom';
 
 function ProfileInfoUpdation() {
 
   const userString = localStorage.getItem('user')
   const user = JSON.parse(userString);
   const [userData, setUserData] = useState('')
-
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [country, setCountry] = useState('')
+  const navigate = useNavigate()
 
   const jwtToken = localStorage.getItem('jwtToken')
   const config = {
@@ -25,7 +26,7 @@ function ProfileInfoUpdation() {
   useEffect(() => {
     axiosInstance.get(`/profieDetails?userId=${user[0]._id}`,config).then(resp => {
       setUserData(resp.data[0])
-    })
+    }).catch(()=>navigate('/error'))
   }, [])
 
   const formLogin = () => {
@@ -44,7 +45,7 @@ function ProfileInfoUpdation() {
           confirmButtonText: 'OK'
         })
       }
-    })
+    }).catch(()=>navigate('/error'))
   }
 
   const { handleChange, handleSubmit, formError, errors, values } = useFormProfileUpdate(formLogin)

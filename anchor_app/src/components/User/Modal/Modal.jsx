@@ -3,6 +3,7 @@ import { FaRegImages } from "react-icons/fa";
 import { modalContext } from '../../../context/Context';
 import axiosInstance from '../../../config/baseUrl';
 import Swal from 'sweetalert2'
+import { useNavigate } from 'react-router-dom';
 
 
 function Modal() {
@@ -15,6 +16,7 @@ function Modal() {
     const userString = localStorage.getItem('user')
     const user = JSON.parse(userString)
     const jwtToken = localStorage.getItem('jwtToken')
+    const navigate = useNavigate();
 
     const saveImage = (e) => {
         if (!e.target.files[0]) return console.log("error");
@@ -59,9 +61,9 @@ function Modal() {
                             timer: 1500
                         })
                     }
-                }).catch(err => console.log(err))
+                }).catch(()=>navigate('/error'))
             })
-            .catch(err => console.log(err))
+            .catch(()=>navigate('/error'))
 
 
 
@@ -73,8 +75,8 @@ function Modal() {
         <>
             <div onClick={() => setPostUploadModalIsopen(false)} className='fixed z-20 h-screen w-screen flex justify-center items-center' style={{ backgroundColor: 'rgba( 16, 12, 12, 0.45 )' }}>
                 <div onClick={(e) => {
-                    if (!e) var e = window.event;
-                    e.cancelBubble = true;
+                    // if (!e) var e = window.event;
+                    // e.cancelBubble = true;
                     if (e.stopPropagation) e.stopPropagation();
                 }} className='bg-white min-w-[500px] min-h-[500px] rounded-2xl flex justify-center items-center overflow-hidden'>
                     {viewImage ?
