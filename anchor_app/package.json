@@ -1,7 +1,7 @@
 {
   "name": "anchor_app",
   "version": "0.1.0",
-  "private": true,
+  "homepage": ".",
   "proxy": "https://res.cloudinary.com/dls74pmjn/",
   "dependencies": {
     "@material-tailwind/react": "^1.2.4",

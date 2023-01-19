@@ -1,7 +1,7 @@
 {
   "name": "anchor-server",
   "version": "0.0.0",
-  "private": true,
+  "homepage": ".",
   "scripts": {
     "start": "nodemon ./bin/www"
   },

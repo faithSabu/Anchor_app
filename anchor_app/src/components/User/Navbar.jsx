@@ -16,8 +16,8 @@ function Navbar() {
       const getallUsersfn = async () => {
         let { data } = await getAllUsers()
         setAllUsers(data)
-        getallUsersfn()
       }
+      getallUsersfn()
     } catch (error) {
       navigate('/error')
     }
